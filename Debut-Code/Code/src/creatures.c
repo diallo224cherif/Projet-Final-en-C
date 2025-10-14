@@ -4,129 +4,86 @@
 #include <time.h>
 #include "creatures.h"
 
-void initialiser_creature(CreatureMarine *creature, int id, const char *nom, int pv_max, int att_min, int att_max, int def, int vit, const char *effet) {
+// Initialise une créature avec des valeurs spécifiques
+void initialiserCreature(CreatureMarine *creature, int id, const char *nom, int pv_max, int att_min, int att_max, int def, int vit, const char *effet) {
     creature->id = id;
-    strcpy(creature->nom, nom);
+    strncpy(creature->nom, nom, TAILLE_NOM - 1);
+    creature->nom[TAILLE_NOM - 1] = '\0';
     creature->points_de_vie_max = pv_max;
     creature->points_de_vie_actuels = pv_max;
     creature->attaque_minimale = att_min;
     creature->attaque_maximale = att_max;
     creature->defense = def;
     creature->vitesse = vit;
-    strcpy(creature->effet_special, effet);
+    strncpy(creature->effet_special, effet, 19);
+    creature->effet_special[19] = '\0';
     creature->est_vivant = 1;
 }
 
-void generer_creatures_zone(CreatureMarine creatures[], int *nb_creatures, int profondeur) {
-    // Initialisation aléatoire
-    srand(time(NULL));
-
-    // Nombre de créatures selon la profondeur
-    if (profondeur > -100) {
-        *nb_creatures = rand() % 2 + 1; // 1-2 créatures
-    } else if (profondeur > -200) {
-        *nb_creatures = rand() % 3 + 1; // 1-3 créatures
+// Génère une créature aléatoire selon la profondeur
+void genererCreature(CreatureMarine *creature, int id, int profondeur) {
+    if (profondeur < 100) {
+        // Créatures faciles
+        int type = rand() % 3;
+        switch (type) {
+            case 0: initialiserCreature(creature, id, "Meduse Bleue", 30, 8, 15, 2, 12, "paralysie"); break;
+            case 1: initialiserCreature(creature, id, "Poisson-Epee", 80, 18, 28, 5, 15, "perforant"); break;
+            case 2: initialiserCreature(creature, id, "Crabe Geant", 100, 12, 20, 10, 8, "carapace"); break;
+        }
+    } else if (profondeur < 250) {
+        // Créatures moyennes
+        int type = rand() % 2;
+        switch (type) {
+            case 0: initialiserCreature(creature, id, "Requin-Tigre", 90, 15, 25, 7, 18, "frenesie"); break;
+            case 1: initialiserCreature(creature, id, "Kraken", 150, 25, 40, 12, 10, "tentacule"); break;
+        }
     } else {
-        *nb_creatures = rand() % 3 + 2; // 2-4 créatures
-    }
-
-    // Types de créatures disponibles
-    typedef struct {
-        char nom[20];
-        int pv_min, pv_max;
-        int att_min, att_max;
-        int defense;
-        int vitesse;
-        char effet[20];
-    } TypeCreature;
-
-    TypeCreature types[] = {
-        {"Kraken", 120, 180, 25, 40, 10, 3, "double_attaque"},
-        {"Requin", 60, 100, 15, 25, 5, 8, "frenesie"},
-        {"Méduse", 20, 40, 8, 15, 2, 6, "paralysie"},
-        {"Poisson-Épée", 70, 90, 18, 28, 7, 7, "perforant"},
-        {"Crabe Géant", 80, 120, 12, 20, 15, 4, "carapace"}
-    };
-
-    // Génération des créatures
-    for (int i = 0; i < *nb_creatures; i++) {
-        int type_index = rand() % 5; // 0-4
-        TypeCreature type = types[type_index];
-
-        int pv = rand() % (type.pv_max - type.pv_min + 1) + type.pv_min;
-        int att_min = type.att_min;
-        int att_max = type.att_max;
-
-        initialiser_creature(&creatures[i],
-                           i,
-                           type.nom,
-                           pv,
-                           att_min,
-                           att_max,
-                           type.defense,
-                           type.vitesse,
-                           type.effet);
+        // Créatures difficiles
+        initialiserCreature(creature, id, "Kraken Geant", 180, 30, 45, 15, 9, "tentacule");
     }
 }
 
-void afficher_creatures(const CreatureMarine creatures[], int nb_creatures) {
-    printf("\n=== CRÉATURES MARINES ===\n");
+// Génère un groupe de 1 à 4 créatures
+void genererGroupeCreatures(CreatureMarine groupe[], int *nbCreatures, int profondeur) {
 
-    if (nb_creatures == 0) {
-        printf("Aucune créature dans la zone.\n");
-        return;
+    *nbCreatures = (rand() % 4) + 1; // Entre 1 et 4 créatures
+
+    for (int i = 0; i < *nbCreatures; i++) {
+        genererCreature(&groupe[i], i + 1, profondeur);
     }
+}
 
-    for (int i = 0; i < nb_creatures; i++) {
-        if (creatures[i].est_vivant) {
-            printf("[%d] %s ", creatures[i].id, creatures[i].nom);
-            printf("(%d/%d PV) ", creatures[i].points_de_vie_actuels, creatures[i].points_de_vie_max);
-            printf("ATK:%d-%d DEF:%d VIT:%d",
-                   creatures[i].attaque_minimale,
-                   creatures[i].attaque_maximale,
-                   creatures[i].defense,
-                   creatures[i].vitesse);
+// Affiche les informations d'une créature
+void afficherCreature(const CreatureMarine *creature) {
+    printf("[%d] %s (%d/%d PV) - ATK: %d-%d - DEF: %d - VIT: %d - Effet: %s\n",
+           creature->id,
+           creature->nom,
+           creature->points_de_vie_actuels,
+           creature->points_de_vie_max,
+           creature->attaque_minimale,
+           creature->attaque_maximale,
+           creature->defense,
+           creature->vitesse,
+           creature->effet_special);
+}
 
-            if (strcmp(creatures[i].effet_special, "aucun") != 0) {
-                printf(" [%s]", creatures[i].effet_special);
-            }
-            printf("\n");
+// Affiche tout le groupe de créatures
+void afficherGroupeCreatures(const CreatureMarine groupe[], int nbCreatures) {
+    printf("\n--- CREATURES RENCONTREES ---\n");
+    for (int i = 0; i < nbCreatures; i++) {
+        if (groupe[i].est_vivant) {
+            afficherCreature(&groupe[i]);
+        } else {
+            printf("[%d] %s (MORT)\n", groupe[i].id, groupe[i].nom);
         }
     }
+    printf("-----------------------------\n");
 }
 
-void attaquer_creature(CreatureMarine *creature, int degats) {
-    int degats_reels = degats - creature->defense;
-    if (degats_reels < 1) {
-        degats_reels = 1; // Dégâts minimum garantis
+// Vérifie si au moins une créature est en vie
+int estGroupeVivant(const CreatureMarine groupe[], int nbCreatures) {
+    for (int i = 0; i < nbCreatures; i++) {
+        if (groupe[i].est_vivant) return 1;
     }
-
-    creature->points_de_vie_actuels -= degats_reels;
-
-    if (creature->points_de_vie_actuels <= 0) {
-        creature->points_de_vie_actuels = 0;
-        creature->est_vivant = 0;
-        printf("%s a été vaincu!\n", creature->nom);
-    } else {
-        printf("%s perd %d PV (%d/%d restants)\n",
-               creature->nom, degats_reels,
-               creature->points_de_vie_actuels, creature->points_de_vie_max);
-    }
-}
-
-int creature_est_morte(const CreatureMarine *creature) {
-    return !creature->est_vivant;
-}
-
-int calcul_degats_creature(const CreatureMarine *creature) {
-    int degats_base = rand() % (creature->attaque_maximale - creature->attaque_minimale + 1) + creature->attaque_minimale;
-
-    // Application des effets spéciaux
-    if (strcmp(creature->effet_special, "frenesie") == 0 &&
-        creature->points_de_vie_actuels < creature->points_de_vie_max / 2) {
-        degats_base = (int)(degats_base * 1.3); // +30% en frénésie
-        printf("%s entre en frénésie! Dégâts augmentés!\n", creature->nom);
-    }
-
-    return degats_base;
+    return 0;
 }
