@@ -1,25 +1,45 @@
-CC = gcc
-CFLAGS = -Wall -std=c99 -g
-INCLUDES = -Iinclude
+# Makefile — OceanDepth (C99)
 
-# SEULEMENT les fichiers qui existent
-SRC = src/main.c src/creatures.c
-OBJ = $(SRC:.c=.o)
-TARGET = oceandepths.exe
+# Dossiers
+SRC_DIR := src
+INC_DIR := include
+BIN_DIR := bin
+OBJ_DIR := obj
 
+# Binaire
+TARGET  := $(BIN_DIR)/oceandepths
+
+# Outils
+CC      := gcc
+CFLAGS  := -std=c99 -Wall -Wextra -Werror -I$(INC_DIR)
+LDFLAGS := 
+
+# Sources et objets
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
+
+# Règle par défaut
+all: prep $(TARGET)
+
+# Link final
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $(TARGET)
+	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 
-src/main.o: src/main.c include/creatures.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c src/main.c -o src/main.o
+# Compilation unitaire
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-src/creatures.o: src/creatures.c include/creatures.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c src/creatures.c -o src/creatures.o
+# Préparation des dossiers
+prep:
+	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
 
+# Nettoyage
 clean:
-	del /Q src\*.o $(TARGET) 2>nul
+	$(RM) -r $(OBJ_DIR)
 
-run: $(TARGET)
-	.\$(TARGET)
+fclean: clean
+	$(RM) -r $(BIN_DIR)
 
-.PHONY: clean run
+re: fclean all
+
+.PHONY: all prep clean fclean re
