@@ -2,7 +2,7 @@
 #define CREATURES_H
 
 #include <stdlib.h>
-#include <moteur.h>
+#include "moteur.h"
 
 #define MAX_CREATURES 4
 #define TAILLE_NOM 30
