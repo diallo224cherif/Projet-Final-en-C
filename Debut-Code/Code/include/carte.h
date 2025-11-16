@@ -1,6 +1,8 @@
 #ifndef CARTE_H
 #define CARTE_H
 
+#include "joueur.h"
+
 typedef struct Carte Carte;
 
 typedef enum {
@@ -18,7 +20,7 @@ typedef enum {
 #define CARTE_LIGNES 3
 #define CARTE_COLONNES 4
 
-Carte* carte_charger_defaut(struct Joueur* joueur); // ✅ Ajout paramètre Joueur
+Carte* carte_charger_defaut(Joueur* joueur);
 void   carte_reinitialiser(Carte* c);
 void   carte_detruire(Carte* c);
 void   carte_afficher(const Carte* c);

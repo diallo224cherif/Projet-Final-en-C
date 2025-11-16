@@ -11,7 +11,7 @@ extern void joueur_detruire(Joueur* j);
 extern void joueur_reinitialise(Joueur* j);
 extern void joueur_consommation_tick(Joueur* j);
 
-extern Carte* carte_charger_defaut(Joueur* joueur); // ✅ Paramètre joueur
+extern Carte* carte_charger_defaut(Joueur* joueur);
 extern void carte_detruire(Carte* c);
 extern void carte_reinitialiser(Carte* c);
 
@@ -35,7 +35,7 @@ int demarrage_moteur(MoteurJeu* moteur) {
     srand(moteur->seed_aleatoire);
 
     moteur->joueur = creerJoueur();
-    moteur->carte = carte_charger_defaut(moteur->joueur); // ✅ Bonus XP intégré
+    moteur->carte = carte_charger_defaut(moteur->joueur);
     moteur->profondeur = 0;
 
     if(!moteur->joueur || !moteur->carte){
@@ -52,4 +52,3 @@ int demarrage_moteur(MoteurJeu* moteur) {
     return 1;
 }
 
-/* Le reste du fichier reste inchangé (exploration, combat, inventaire, etc.) */
