@@ -4,7 +4,6 @@
 #include "../include/creatures.h"
 #include "../include/joueur.h"
 #include "../include/combat.h"
-#include "combat.c"
 
 
 int main() {

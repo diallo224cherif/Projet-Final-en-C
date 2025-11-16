@@ -196,3 +196,13 @@ int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
 
     return total_attaques;
 }
+
+int joueur_defense(const Joueur* j)       { return j->def; }
+void joueur_degats_subis(Joueur* j, int d){ j->pv -= d; if (j->pv < 0) j->pv = 0; }
+void joueur_reduction_oxygene(Joueur* j, int delta) {
+    j->oxygene -= delta;
+    if (j->oxygene < 0) j->oxygene = 0;
+}
+void joueur_application_paralysie_tick(Joueur* j, int delta) {
+    j->paralysie += delta;
+}
