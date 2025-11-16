@@ -61,6 +61,6 @@ typedef struct {
 
 int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe);
 
-Creature creature_creation(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse);
+Creature creature_creer(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse);
 
 #endif

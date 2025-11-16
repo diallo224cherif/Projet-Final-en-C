@@ -3,6 +3,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void combat_afficher_etat(const MoteurJeu* jeu) {
+    const Joueur* j = jeu->joueur;
+
+    printf("\n=== ETAT DU COMBAT ===\n");
+    printf("Profondeur : %d\n", jeu->profondeur);
+    printf("PV Joueur  : %d/%d\n", j->pv, j->pv_max);
+    printf("Oxygène    : %d/%d\n", j->oxygene, j->oxygene_max);
+    printf("Fatigue    : %d\n", j->fatigue);
+}
+
+void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
+    (void)groupe;
+    printf("\n=== TOUR DU JOUEUR ===\n");
+    printf("(Les actions du joueur ne sont pas encore implémentées, tour passé.)\n");
+}
+
+
 extern int joueur_mort(const Joueur* j);
 extern int joueur_pv(const Joueur* j);
 extern int joueur_oxygene(const Joueur* j);
@@ -13,11 +30,6 @@ extern void joueur_consommation_oxygene(Joueur* j, int profondeur);
 /* gestion retrait oxygene selon profondeur */
 
 extern void joueur_recuperation_fatigue(Joueur* j, int delta);
-
-/* affichage et action joueur */
-extern void combat_afficher_etat(const MoteurJeu* jeu);
-
-extern void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe);
 
 /* groupe de creature pour ce combat */
 
@@ -101,31 +113,4 @@ int calcul_degats(int attaque_min, int attaque_max, int defense) {
     int degats = degats_base - defense;
     if (degats < 1) degats = 1;
     return degats;
-}
-
-void attaque_plongeur(Plongeur p, Creature c, int attaque_min, int attaque_max, int consommation_oxygene) {
-    if (p.niveau_fatigue >= 5) {
-        printf("Vous êtes trop fatigué pour attaquer !\n");
-        return;
-    }
-
-    // Consommation d’oxygène
-    p.niveau_oxygene -= consommation_oxygene;
-    if (p.niveau_oxygene <= 10 && p.niveau_oxygene > 0)
-        printf("\033[1;31mALERTE CRITIQUE : Niveau d'oxygène bas (%d)\033[0m\n", p.niveau_oxygene);
-    else if (p.niveau_oxygene <= 0) {
-        printf("\033[1;31mOXYGÈNE ÉPUISÉ ! Vous perdez 5 PV par tour !\033[0m\n");
-        p.points_de_vie -= 5;
-    }
-
-    // Calcul des dégâts
-        int degats = calcul_degats(attaque_min, attaque_max, c.def);
-    c.pv -= degats;
-    if (c.pv < 0) c.pv = 0;
-
-    // Fatigue
-    p.niveau_fatigue++;
-
-    printf("Vous attaquez %d et infligez %d dégâts !\n", c.type, degats);
-    printf("Oxygène consommé: -%d | Fatigue augmentée: +1\n", consommation_oxygene);
 }

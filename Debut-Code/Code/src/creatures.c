@@ -1,99 +1,18 @@
+#include "creatures.h"
+#include "moteur.h"
+#include "joueur.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include "creatures.h"
-
-// Initialise une créature avec des valeurs spécifiques
-void initialiserCreature(CreatureMarine *creature, int id, const char *nom, int pv_max, int att_min, int att_max, int def, int vit, const char *effet) {
-    creature->id = id;
-    strncpy(creature->nom, nom, TAILLE_NOM - 1);
-    creature->nom[TAILLE_NOM - 1] = '\0';
-    creature->points_de_vie_max = pv_max;
-    creature->points_de_vie_actuels = pv_max;
-    creature->attaque_minimale = att_min;
-    creature->attaque_maximale = att_max;
-    creature->defense = def;
-    creature->vitesse = vit;
-    strncpy(creature->effet_special, effet, 19);
-    creature->effet_special[19] = '\0';
-    creature->est_vivant = 1;
-}
-
-// Génère une créature aléatoire selon la profondeur
-void genererCreature(CreatureMarine *creature, int id, int profondeur) {
-    if (profondeur < 100) {
-        // Créatures faciles
-        int type = rand() % 3;
-        switch (type) {
-            case 0: initialiserCreature(creature, id, "Meduse Bleue", 30, 8, 15, 2, 12, "paralysie"); break;
-            case 1: initialiserCreature(creature, id, "Poisson-Epee", 80, 18, 28, 5, 15, "perforant"); break;
-            case 2: initialiserCreature(creature, id, "Crabe Geant", 100, 12, 20, 10, 8, "carapace"); break;
-        }
-    } else if (profondeur < 250) {
-        // Créatures moyennes
-        int type = rand() % 2;
-        switch (type) {
-            case 0: initialiserCreature(creature, id, "Requin-Tigre", 90, 15, 25, 7, 18, "frenesie"); break;
-            case 1: initialiserCreature(creature, id, "Kraken", 150, 25, 40, 12, 10, "tentacule"); break;
-        }
-    } else {
-        // Créatures difficiles
-        initialiserCreature(creature, id, "Kraken Geant", 180, 30, 45, 15, 9, "tentacule");
-    }
-}
-
-// Génère un groupe de 1 à 4 créatures
-void genererGroupeCreatures(CreatureMarine groupe[], int *nbCreatures, int profondeur) {
-
-    *nbCreatures = (rand() % 4) + 1; // Entre 1 et 4 créatures
-
-    for (int i = 0; i < *nbCreatures; i++) {
-        genererCreature(&groupe[i], i + 1, profondeur);
-    }
-}
-
-// Affiche les informations d'une créature
-void afficherCreature(const CreatureMarine *creature) {
-    printf("[%d] %s (%d/%d PV) - ATK: %d-%d - DEF: %d - VIT: %d - Effet: %s\n",
-           creature->id,
-           creature->nom,
-           creature->points_de_vie_actuels,
-           creature->points_de_vie_max,
-           creature->attaque_minimale,
-           creature->attaque_maximale,
-           creature->defense,
-           creature->vitesse,
-           creature->effet_special);
-}
-
-// Affiche tout le groupe de créatures
-void afficherGroupeCreatures(const CreatureMarine groupe[], int nbCreatures) {
-    printf("\n--- CREATURES RENCONTREES ---\n");
-    for (int i = 0; i < nbCreatures; i++) {
-        if (groupe[i].est_vivant) {
-            afficherCreature(&groupe[i]);
-        } else {
-            printf("[%d] %s (MORT)\n", groupe[i].id, groupe[i].nom);
-        }
-    }
-    printf("-----------------------------\n");
-}
-
-// Vérifie si au moins une créature est en vie
-int estGroupeVivant(const CreatureMarine groupe[], int nbCreatures) {
-    for (int i = 0; i < nbCreatures; i++) {
-        if (groupe[i].est_vivant) return 1;
-    }
-    return 0;
-}
 
 extern void joueur_degats_subis(Joueur* j, int degats);
 extern int joueur_defense(const Joueur* j);
 extern void joueur_reduction_oxygene(Joueur* j, int delta);
 extern void joueur_application_paralysie_tick(Joueur* j, int delta);
 
-Creature creature_creation(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse) {
+static int clamp_min(int x, int mn){return (x < mn) ? mn : x;}
+
+Creature creature_creer(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse) {
     Creature c;
     c.type = t;
     c.pv = pv;
@@ -105,6 +24,7 @@ Creature creature_creation(TypeCreature t, int pv, int pv_max, int att, int def,
     c.en_vie = (pv > 0);
     return c;
 }
+
 
 static int calcul_degats_sur_joueur(const Creature* c, const Joueur* j) {
     int def_j = joueur_defense(j);
@@ -128,21 +48,28 @@ static int calcul_degats_sur_joueur(const Creature* c, const Joueur* j) {
 /* trie par vitesse décroissante */
 static void trier_vitesse_desc(const GroupeCreatures* g, int* indices) {
     int i, j;
+
+    if (!g || !g->tab || g->nb <= 0) return;
+
     for (i = 0; i < g->nb; i++)
-    for (i = 0; i < g->nb - 1; i++) {
-        for (j = 0; j < g->nb - 1 - i; j++) {
-            int a = indices[j], b = indices[j+1];
-            if (g->tab[a].vitesse < g->tab[b].vitesse) {
-                int temp = indices[j];
-                indices[j] = indices[j+1];
-                indices[j+1] = temp;
+        for (i = 0; i < g->nb - 1; i++) {
+            for (j = 0; j < g->nb - 1 - i; j++) {
+                int a = indices[j];
+                int b = indices[j+1];
+
+                if (g->tab[a].vitesse < g->tab[b].vitesse) {
+                    int temp = indices[j];
+                    indices[j] = indices[j+1];
+                    indices[j+1] = temp;
+                }
             }
         }
-    }
 }
 
 /* application stress oxygène après attaque subie */
 static void appliquer_stress_oxygene(MoteurJeu* jeu) {
+    if (!jeu || jeu->joueur) return;
+
     int delta = 1 + (rand() % 2); /* 1 ou 2 */
     joueur_reduction_oxygene(jeu->joueur, delta);
 }
@@ -175,6 +102,9 @@ static int creature_effectue_attaque(MoteurJeu* jeu, Creature* c) {
     return attaque_effectuees;
 }
 
+static Creature g_creatures[5]; /* liste des créatures possibles */
+static GroupeCreatures g_groupe = { g_creatures, 0};
+
 int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
     if (!jeu || !groupe || !groupe->tab || groupe->nb <= 0) return 0;
 
@@ -197,12 +127,32 @@ int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
     return total_attaques;
 }
 
-int joueur_defense(const Joueur* j)       { return j->def; }
-void joueur_degats_subis(Joueur* j, int d){ j->pv -= d; if (j->pv < 0) j->pv = 0; }
-void joueur_reduction_oxygene(Joueur* j, int delta) {
-    j->oxygene -= delta;
-    if (j->oxygene < 0) j->oxygene = 0;
+int creatures_generation(MoteurJeu* jeu) {
+    (void)jeu;
+
+    g_groupe.nb = 1;
+    g_creatures[0] = creature_creer(
+        C_REQUIN,
+        40,
+        40,
+        12,
+        3,
+        5
+        );
+
+    g_creatures[0].en_vie = 1;
+
+    printf("[Creatures] Génération de %d créature(s).\n", g_groupe.nb);
+    return g_groupe.nb;
 }
-void joueur_application_paralysie_tick(Joueur* j, int delta) {
-    j->paralysie += delta;
+
+void creatures_postcombat(MoteurJeu* jeu) {
+    (void)jeu;
+    printf("[Creatures] Fin de combat, Groupe réinitialisé.\n");
+    g_groupe.nb = 0;
+}
+
+GroupeCreatures* combat_obtenir_groupe(MoteurJeu* jeu) {
+    (void)jeu;
+    return &g_groupe;
 }
