@@ -3,7 +3,6 @@
 #include "joueur.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 extern void joueur_degats_subis(Joueur* j, int degats);
 extern int joueur_defense(const Joueur* j);
@@ -97,7 +96,7 @@ static Creature g_creatures[5];
 static GroupeCreatures g_groupe = { g_creatures, 0 };
 
 int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
-    if (!jeu || !jeu->joueur || !groupe || groupe->tab) return 0;
+    if (!jeu || !jeu->joueur || !groupe || !groupe->tab) return 0;
     if (groupe->nb <= 0) return 0;
 
     int total_attaques = 0;
