@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "carte.h"
+
 extern void joueur_degats_subis(Joueur* j, int degats);
 extern int joueur_defense(const Joueur* j);
 extern void joueur_reduction_oxygene(Joueur* j, int delta);
@@ -112,18 +114,55 @@ int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
 }
 
 int creatures_generation(MoteurJeu* jeu) {
-    if (!jeu) return 0;
+    if (!jeu || !jeu->carte) return 0;
 
-    g_groupe.nb = 1;
-    g_creatures[0] = creature_creer(C_REQUIN, 40, 40, 12, 3, 5);
-    g_creatures[0].en_vie = 1;
+    if (carte_case_sure(jeu->carte)) {
+        g_groupe.nb = 0;
+        return 0;
+    }
 
-    printf("[Creatures] Generation de %d creature(s).\n", g_groupe.nb);
+    int max_enemis = carte_nb_ennemis_max(jeu->carte);
+    if (max_enemis <= 0) max_enemis = 1;
+    if (max_enemis > 5) max_enemis = 5;
 
-    Creature* c = &g_creatures[0];
-    printf("\nVous tombez sur une creature : %s !\n", creature_nom(c->type));
-    printf("PV: %d/%d, Att: %d, Def: %d, Vit: %d\n",
-           c->pv, c->pv_max, c->att, c->def, c->vitesse);
+    int nb = 1 + (rand() % max_enemis);
+    if (nb > 5) nb = 5;
+
+    g_groupe.nb = nb;
+
+    int profondeur = jeu->profondeur;
+    int i;
+    for (i = 0; i < nb; i++) {
+        TypeCreature t;
+
+        if (profondeur < 50) {
+            t = C_MEDUSE;
+        } else if (profondeur < 150) {
+            int r = rand() % 3;
+            if (r == 0) t = C_MEDUSE;
+            else if (r == 1) t = C_REQUIN;
+            else t = C_POISSON_EPEE;
+        } else {
+            int r = rand() % 3;
+            if (r ==0) t = C_REQUIN;
+            else if (r == 1) t = C_CRABE_GEANT;
+            else t = C_KRAKEN;
+        }
+
+        g_creatures[i] = creature_creer(t, 40, 40, 12, 3, 5);
+        g_creatures[i].en_vie = 1;
+    }
+
+    {
+        int i;
+        printf("\nVous tombez sur %d creature(s) !\n", g_groupe.nb);
+        for (i = 0; i < g_groupe.nb; ++i) {
+            Creature* c = &g_creatures[i];
+            printf(" - [%d] %s (PV %d/%d, Att %d, Def %d, Vit %d)\n",
+                   i + 1, creature_nom(c->type),
+                   c->pv, c->pv_max, c->att, c->def, c->vitesse);
+        }
+}
     return g_groupe.nb;
 }
 
