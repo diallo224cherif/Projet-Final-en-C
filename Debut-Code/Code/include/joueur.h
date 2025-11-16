@@ -1,18 +1,39 @@
-#ifndef COMBAT_H
-#define COMBAT_H
-#include "moteur.h"
-#include "creatures.h"
+#ifndef JOUEUR_H
+#define JOUEUR_H
 
-int combat_resolution(MoteurJeu* jeu);
-typedef struct {
-    int points_de_vie;
-    int points_de_vie_max;
-    int niveau_oxygene;
-    int niveau_oxygene_max;
-    int niveau_fatigue; // 0 à 5
-    int perles;
-} Plongeur;
+typedef struct Joueur {
+    int pv;
+    int pv_max;
 
+    int oxygene;
+    int oxygene_max;
 
+    int fatigue;
+    int defense;
+    int attaque;
+
+    int paralysie;
+} Joueur;
+
+Joueur* creerJoueur(void);
+void    joueur_detruire(Joueur* j);
+void    joueur_reinitialise(Joueur* j);
+
+void joueur_consommation_tick(Joueur* j);
+
+int joueur_pv(const Joueur* j);
+int joueur_oxygene(const Joueur* j);
+int joueur_fatigue(const Joueur* j);
+
+int joueur_mort(const Joueur* j);
+
+int  joueur_defense(const Joueur* j);
+void joueur_degats_subis(Joueur* j, int degats);
+
+void joueur_consommation_oxygene(Joueur* j, int profondeur);
+void joueur_reduction_oxygene(Joueur* j, int delta);
+
+void joueur_recuperation_fatigue(Joueur* j, int delta);
+void joueur_application_paralysie_tick(Joueur* j, int delta);
 
 #endif

@@ -1,7 +1,90 @@
-#include "../include/creatures.h"
+#include "../include/combat.h"
 #include "../include/joueur.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+void combat_afficher_etat(const MoteurJeu* jeu) {
+    if (!jeu || !jeu->joueur) return;
+
+    const Joueur* j = jeu->joueur;
+
+    printf("\n=== ETAT DU COMBAT ===\n");
+    printf("Profondeur : %d\n", jeu->profondeur);
+    printf("PV Joueur  : %d/%d\n", j->pv, j->pv_max);
+    printf("Oxygène    : %d/%d\n", j->oxygene, j->oxygene_max);
+    printf("Fatigue    : %d\n", j->fatigue);
+    if (j->paralysie > 0) {
+        printf("Statut: PARALYSE (%d tour(s) restant(s))\n", j->paralysie);
+    }
+}
+
+void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
+    if (!jeu || !jeu->joueur || !groupe) return;
+
+    Joueur* j = jeu->joueur;
+
+    printf("\n=== TOUR DU JOUEUR ===\n");
+
+    if (j->paralysie > 0) {
+        printf("Vous êtes paralysé et ne pouvez pas agir ce tour.\n");
+        j->paralysie --;
+        return;
+    }
+
+    printf("1.Attaquer\n");
+    printf("2.Utiliser une capsule d'oxygène (+20 oxygène)\n");
+    printf("3.Tenter de fuir\n");
+
+    int choix = moteur_choix("Choisissez une action", 1, 3);
+
+    if (choix == 1) {
+        int cible_index = -1;
+        int i;
+        for (i = 0; i < groupe->nb; i++) {
+            if (groupe->tab[i].en_vie && groupe->tab[i].pv > 0) {
+                cible_index = i;
+                break;
+            }
+        }
+
+    if (cible_index == -1) {
+        printf("Aucune créature à attaquer.\n");
+        return;
+    }
+
+    Creature* c = &groupe->tab[cible_index];
+
+        int deg = j->attaque - c->def;
+        if (deg < 1) deg = 1;
+        printf("Vous attaquez la créature (type=%d) et infligez %d dégâts.\n",
+            (int)c->type, deg);
+
+        c->pv -= deg;
+        if (c->pv <= 0) {
+            c->pv = 0;
+            c->en_vie = 0;
+            printf("La créature est morte !\n");
+        } else {
+            printf("PV créature restante : %d/%d\n", c->pv, c->pv_max);
+        }
+    } else if (choix == 2) {
+        int avant = j->oxygene;
+        j->oxygene += 20;
+        if (j->oxygene > j->oxygene_max) {
+            j->oxygene = j->oxygene_max;
+            printf("Vous utilisez une capsule d'oxygène: %d -> %d\n", avant, j->oxygene);
+        } else {
+            printf("Vous prenez la fuite!\n");
+            int i;
+            for (i = 0; i < groupe->nb; i++) {
+                groupe->tab[i].en_vie = 0;
+                groupe->tab[i].pv = 0;
+            }
+            groupe->nb = 0;
+        }
+    }
+}
+
 
 extern int joueur_mort(const Joueur* j);
 extern int joueur_pv(const Joueur* j);
@@ -13,11 +96,6 @@ extern void joueur_consommation_oxygene(Joueur* j, int profondeur);
 /* gestion retrait oxygene selon profondeur */
 
 extern void joueur_recuperation_fatigue(Joueur* j, int delta);
-
-/* affichage et action joueur */
-extern void combat_afficher_etat(const MoteurJeu* jeu);
-
-extern void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe);
 
 /* groupe de creature pour ce combat */
 
@@ -40,9 +118,13 @@ static int combat_creatures_mortes(const GroupeCreatures* g) {
 
 static void combat_alerte_oxygene(const Joueur* j) {
     int oxy = joueur_oxygene(j);
-    if (oxy <= 10) {
+    if (oxy <= 0) {
+        printf("!!! VOUS N'AVEZ PLUS D'OXYGÈNE !!!\n");
+    } else if (oxy <= 10) {
         printf("!!! ALERTE OXYGÈNE CRITIQUE (%d) !!!\n", oxy);
         printf("Utilisez une capsule ou remontez rapidement !\n");
+    } else if (oxy <= 30) {
+        printf("! Alerte oxygène faible (%d) !\n", oxy);
     }
 }
 
@@ -101,31 +183,4 @@ int calcul_degats(int attaque_min, int attaque_max, int defense) {
     int degats = degats_base - defense;
     if (degats < 1) degats = 1;
     return degats;
-}
-
-void attaque_plongeur(Plongeur p, Creature c, int attaque_min, int attaque_max, int consommation_oxygene) {
-    if (p.niveau_fatigue >= 5) {
-        printf("Vous êtes trop fatigué pour attaquer !\n");
-        return;
-    }
-
-    // Consommation d’oxygène
-    p.niveau_oxygene -= consommation_oxygene;
-    if (p.niveau_oxygene <= 10 && p.niveau_oxygene > 0)
-        printf("\033[1;31mALERTE CRITIQUE : Niveau d'oxygène bas (%d)\033[0m\n", p.niveau_oxygene);
-    else if (p.niveau_oxygene <= 0) {
-        printf("\033[1;31mOXYGÈNE ÉPUISÉ ! Vous perdez 5 PV par tour !\033[0m\n");
-        p.points_de_vie -= 5;
-    }
-
-    // Calcul des dégâts
-        int degats = calcul_degats(attaque_min, attaque_max, c.def);
-    c.pv -= degats;
-    if (c.pv < 0) c.pv = 0;
-
-    // Fatigue
-    p.niveau_fatigue++;
-
-    printf("Vous attaquez %s et infligez %d dégâts !\n", c.type, degats);
-    printf("Oxygène consommé: -%d | Fatigue augmentée: +1\n", consommation_oxygene);
 }
