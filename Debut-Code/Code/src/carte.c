@@ -1,8 +1,9 @@
 #include "../include/carte.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "../include/joueur.h"
 
-Carte* carte_charger_defaut(void) {
+Carte* carte_charger_defaut(Joueur* joueur) {
     Carte* c = (Carte*)malloc(sizeof(Carte));
     if (!c) {
         printf("[Carte] Erreur d’allocation de la carte.\n");
@@ -10,6 +11,10 @@ Carte* carte_charger_defaut(void) {
     }
     c->amodifier = 0;
     printf("[Carte] Carte par defaut chargee.\n");
+
+    joueur_ajouter_experience(joueur, 10);
+    joueur_debloquer_competence(joueur);
+
     return c;
 }
 

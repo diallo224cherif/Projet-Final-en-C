@@ -13,7 +13,7 @@ extern void joueur_detruire(Joueur* j);
 extern void joueur_reinitialise(Joueur* j);
 extern void joueur_consommation_tick(Joueur* j);
 
-extern Carte* carte_charger_defaut(void);
+extern Carte* carte_charger_defaut(Joueur* joueur);
 extern void carte_detruire(Carte* c);
 extern void carte_reinitialiser(Carte* c);
 
@@ -50,7 +50,7 @@ int demarrage_moteur(MoteurJeu* moteur) {
 
 	/* Création sous systèmes du moteur */
 	moteur->joueur = creerJoueur();
-	moteur->carte = carte_charger_defaut();
+	moteur->carte = carte_charger_defaut(moteur->joueur);
 	moteur->profondeur = 0;
 
 	if(!moteur->joueur || !moteur->carte){

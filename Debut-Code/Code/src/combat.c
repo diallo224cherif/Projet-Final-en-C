@@ -36,6 +36,8 @@ void combat_afficher_etat(const MoteurJeu* jeu) {
     printf("Vie  : %d/%d\n", j->pv, j->pv_max);
     printf("Oxygene    : %d/%d\n", j->oxygene, j->oxygene_max);
     printf("Fatigue    : %d\n", j->fatigue);
+    printf("Niveau : %d | XP : %d/100\n", j->niveau, j->experience);
+    printf("Capacites -> Apnee: %d | Resistance: %d | Force: %d\n", j->apnee, j->resistance, j->force);
     if (j->paralysie > 0) {
         printf("Statut: PARALYSE (%d tour(s) restant(s))\n", j->paralysie);
     }
@@ -87,6 +89,10 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
             printf("Vous attaquez la creature %s et infligez %d degats.\n",
                 creature_nom(c->type), deg);
             printf("La creature %s est vaincue!\n", creature_nom(c->type));
+
+            joueur_ajouter_experience(j, 20);
+            printf("[XP] Vous gagnez 20 points d'expérience ! (XP actuel: %d/100)\n", j->experience);
+            joueur_debloquer_competence(j);
         } else {
             printf("Vous attaquez la creature %s et infligez %d degats.\n",
                 creature_nom(c->type), deg);
