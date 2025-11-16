@@ -126,6 +126,6 @@ void attaque_plongeur(Plongeur p, Creature c, int attaque_min, int attaque_max, 
     // Fatigue
     p.niveau_fatigue++;
 
-    printf("Vous attaquez %s et infligez %d dégâts !\n", c.type, degats);
+    printf("Vous attaquez %d et infligez %d dégâts !\n", c.type, degats);
     printf("Oxygène consommé: -%d | Fatigue augmentée: +1\n", consommation_oxygene);
 }

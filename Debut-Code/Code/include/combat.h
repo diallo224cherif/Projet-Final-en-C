@@ -4,6 +4,6 @@
 
 
 int combat_resolution(MoteurJeu* jeu);
-void attaque_plongeur(Plongeur p, Creaturec, int attaque_min, int attaque_max, int consommation_oxygene);
+void attaque_plongeur(Plongeur p, Creature c, int attaque_min, int attaque_max, int consommation_oxygene);
 
 #endif
