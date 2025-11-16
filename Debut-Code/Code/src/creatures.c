@@ -46,7 +46,7 @@ static int calcul_degats_sur_joueur(const Creature* c, const Joueur* j) {
 }
 
 /* trie par vitesse décroissante */
-static void trier_vitesse_desc(const GroupeCreatures* g, int* indices) {
+/*static void trier_vitesse_desc(const GroupeCreatures* g, int* indices) {
     int i, j;
 
     if (!g || !g->tab || g->nb <= 0) return;
@@ -64,7 +64,7 @@ static void trier_vitesse_desc(const GroupeCreatures* g, int* indices) {
                 }
             }
         }
-}
+}*/
 
 /* application stress oxygène après attaque subie */
 static void appliquer_stress_oxygene(MoteurJeu* jeu) {
@@ -106,19 +106,14 @@ static Creature g_creatures[5]; /* liste des créatures possibles */
 static GroupeCreatures g_groupe = { g_creatures, 0};
 
 int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
-    if (!jeu || !groupe || !groupe->tab || groupe->nb <= 0) return 0;
-
-    /* limitation nombre de créatures */
-    int indices[32];
-    int N = groupe->nb;
-    if (N > 32) N = 32;
-
-    trier_vitesse_desc(groupe, indices);
+    if (!jeu || !jeu->joueur || !groupe || groupe->tab <= 0) return 0;
+    if (groupe->nb <= 0) return 0;
 
     /* boucle attaque dans ordre */
     int total_attaques = 0;
-    for (int ii = 0; ii < N; ++ii) {
-        Creature* c = &groupe->tab[indices[ii]];
+
+    for (int i = 0; i < groupe->nb; ++i) {
+        Creature* c = &groupe->tab[i];
         if (!c->en_vie || c->pv <= 0) continue;
 
         total_attaques += creature_effectue_attaque(jeu, c);
@@ -128,7 +123,7 @@ int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
 }
 
 int creatures_generation(MoteurJeu* jeu) {
-    (void)jeu;
+    if (!jeu) return 0;
 
     g_groupe.nb = 1;
     g_creatures[0] = creature_creer(

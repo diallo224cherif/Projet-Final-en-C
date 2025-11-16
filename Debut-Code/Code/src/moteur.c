@@ -135,22 +135,26 @@ static void etat_menu(MoteurJeu* moteur){
 	printf("4. Quitter\n");
 
 	int c = moteur_choix("Choix", 1, 4);
-	if (c == 1 || c == 2) {
-		if (c==2) {
-			if (moteur->joueur) joueur_reinitialise(moteur->joueur);
-			if (moteur->carte) carte_reinitialiser(moteur->carte);
-			moteur->profondeur = 0;
+	if (c == 1){
+		if (!moteur->joueur || joueur_mort(moteur->joueur)) {
+			printf("Aucune partie en cours à continuer.\n");
+			moteur->etat = ETAT_MENU;
+			return;
 		}
 		moteur->etat = ETAT_EXPLORATION;
+	} else if (c == 2) {
+		if (moteur->joueur) joueur_reinitialise(moteur->joueur);
+		if (moteur->carte) carte_reinitialiser(moteur->carte);
+		moteur->profondeur = 0;
+		moteur->etat = ETAT_EXPLORATION;
 	} else if (c == 3) {
-		if (sauvegarde_charger(moteur)) {
+		if (sauvegarde_charger(moteur)){
+			printf("Sauvegarde chargée avec succès.\n");
 			moteur->etat = ETAT_EXPLORATION;
-		} else {
-			printf("Échec du chargement de la sauvegarde.\n");
-			moteur->etat = ETAT_MENU;
 		}
 	} else {
 		moteur->etat = ETAT_QUITTE;
+		moteur->en_cours = 0;
 	}
 }
 
@@ -189,7 +193,8 @@ static void etat_combat(MoteurJeu* moteur){
 		moteur->etat = ETAT_EXPLORATION;
 	} else if (res < 0) {
 		printf("Vous avez perdu...\n");
-		moteur->etat = ETAT_MENU;
+		moteur->en_cours = 0;
+		moteur->etat = ETAT_QUITTE;
 	} else {
 		/* Combat non terminé, rester en combat */
 	}
