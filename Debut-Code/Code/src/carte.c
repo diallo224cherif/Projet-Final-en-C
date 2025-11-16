@@ -9,18 +9,18 @@ Carte* carte_charger_defaut(void) {
         return NULL;
     }
     c->amodifier = 0;
-    printf("[Carte] Carte par défaut chargée.\n");
+    printf("[Carte] Carte par defaut chargee.\n");
     return c;
 }
 
 void carte_detruire(Carte* c) {
     if (!c) return;
     free(c);
-    printf("[Carte] Carte détruite.\n");
+    printf("[Carte] Carte detruite.\n");
 }
 
 void carte_reinitialiser(Carte* c) {
     if (!c) return;
     c->amodifier = 0;
-    printf("[Carte] Carte réinitialisée.\n");
+    printf("[Carte] Carte reinitialisee.\n");
 }

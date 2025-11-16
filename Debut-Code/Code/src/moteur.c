@@ -118,7 +118,7 @@ int moteur_choix(const char* message, int min, int max) {
 		} else{
 			int c;
 			while((c = getchar()) != '\n' && c != EOF){}
-			printf("Entrée invalide.\n");
+			printf("Entree invalide.\n");
 		}
 	} while(!ok);
 	return choix;
@@ -137,7 +137,7 @@ static void etat_menu(MoteurJeu* moteur){
 	int c = moteur_choix("Choix", 1, 4);
 	if (c == 1){
 		if (!moteur->joueur || joueur_mort(moteur->joueur)) {
-			printf("Aucune partie en cours à continuer.\n");
+			printf("Aucune partie en cours a continuer.\n");
 			moteur->etat = ETAT_MENU;
 			return;
 		}
@@ -149,7 +149,7 @@ static void etat_menu(MoteurJeu* moteur){
 		moteur->etat = ETAT_EXPLORATION;
 	} else if (c == 3) {
 		if (sauvegarde_charger(moteur)){
-			printf("Sauvegarde chargée avec succès.\n");
+			printf("Sauvegarde chargee avec succes.\n");
 			moteur->etat = ETAT_EXPLORATION;
 		}
 	} else {
@@ -209,9 +209,9 @@ static void etat_inventaire(MoteurJeu* moteur){
 
 static void etat_sauvegarde(MoteurJeu* moteur){
 	if (sauvegarde_ecrire(moteur)){
-		printf("Sauvegarde réussie.\n");
+		printf("Sauvegarde reussie.\n");
 	} else {
-		printf("Échec de la sauvegarde.\n");
+		printf("Echec de la sauvegarde.\n");
 	}
 	moteur->etat = ETAT_EXPLORATION;
 }

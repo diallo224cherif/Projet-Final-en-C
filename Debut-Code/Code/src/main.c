@@ -6,7 +6,7 @@ int main(void) {
     MoteurJeu jeu;
 
     if (!demarrage_moteur(&jeu)) {
-        printf("Erreur au démarrage du moteur de jeu.\n");
+        printf("Erreur au demarrage du moteur de jeu.\n");
         return 1;
     }
 

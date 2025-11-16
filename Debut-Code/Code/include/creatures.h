@@ -10,8 +10,11 @@ typedef enum {
     C_MEDUSE,
     C_REQUIN,
     C_POISSON_EPEE,
-    C_CRABE_GEANT
+    C_CRABE_GEANT,
+    C_NB_TYPES
 } TypeCreature;
+
+const char* creature_nom(TypeCreature t);
 
 /* effets persistants par creature */
 typedef struct {

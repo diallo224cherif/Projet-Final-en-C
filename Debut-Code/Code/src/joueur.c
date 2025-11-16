@@ -81,7 +81,7 @@ void joueur_degats_subis(Joueur* j, int degats) {
     j->pv -= degats;
     if (j->pv < 0) j->pv = 0;
 
-    printf("[Joueur] Subit %d dégâts, PV = %d/%d\n", degats, j->pv, j->pv_max);
+    printf("[Joueur] Subit %d degats, PV = %d/%d\n", degats, j->pv, j->pv_max);
 }
 
 void joueur_reduction_oxygene(Joueur* j, int delta) {
@@ -101,7 +101,7 @@ void joueur_consommation_oxygene(Joueur* j, int profondeur) {
     j->oxygene -= conso;
     if (j->oxygene < 0) j->oxygene = 0;
 
-    printf("[Joueur] Consomme %d oxygène (profondeur=%d). Oxygène = %d/%d\n",
+    printf("[Joueur] Consomme %d oxygene (profondeur=%d). Oxygene = %d/%d\n",
            conso, profondeur, j->oxygene, j->oxygene_max);
 }
 

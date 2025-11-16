@@ -3,15 +3,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void afficher_barre(const char* label, int valeur, int max) {
+    int largeur = 20;
+    int i;
+    int rempli;
+
+    if (max <= 0) max = 1;
+    if (valeur < 0) valeur = 0;
+    if (valeur > max) valeur = max;
+
+    rempli = (valeur * largeur) / max;
+
+    printf("%-8s [", label);
+    for (i = 0; i < largeur; i++) {
+        if (i < rempli) {
+            putchar('#');
+        } else {
+            putchar('-');
+        }
+    }
+    printf("] %d/%d\n", valeur, max);
+}
+
 void combat_afficher_etat(const MoteurJeu* jeu) {
     if (!jeu || !jeu->joueur) return;
 
     const Joueur* j = jeu->joueur;
 
-    printf("\n=== ETAT DU COMBAT ===\n");
-    printf("Profondeur : %d\n", jeu->profondeur);
-    printf("PV Joueur  : %d/%d\n", j->pv, j->pv_max);
-    printf("Oxygène    : %d/%d\n", j->oxygene, j->oxygene_max);
+    printf("\nOceanDepth - Profondeur: %d\n", jeu->profondeur);
+
+    printf("=== ETAT DU JOUEUR ===\n");
+    printf("Vie  : %d/%d\n", j->pv, j->pv_max);
+    printf("Oxygene    : %d/%d\n", j->oxygene, j->oxygene_max);
     printf("Fatigue    : %d\n", j->fatigue);
     if (j->paralysie > 0) {
         printf("Statut: PARALYSE (%d tour(s) restant(s))\n", j->paralysie);
@@ -26,13 +49,13 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
     printf("\n=== TOUR DU JOUEUR ===\n");
 
     if (j->paralysie > 0) {
-        printf("Vous êtes paralysé et ne pouvez pas agir ce tour.\n");
+        printf("Vous etes paralyse et ne pouvez pas agir ce tour.\n");
         j->paralysie --;
         return;
     }
 
     printf("1.Attaquer\n");
-    printf("2.Utiliser une capsule d'oxygène (+20 oxygène)\n");
+    printf("2.Utiliser une capsule d'oxygene (+20 oxygene)\n");
     printf("3.Tenter de fuir\n");
 
     int choix = moteur_choix("Choisissez une action", 1, 3);
@@ -48,7 +71,7 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
         }
 
     if (cible_index == -1) {
-        printf("Aucune créature à attaquer.\n");
+        printf("Aucune creature à attaquer.\n");
         return;
     }
 
@@ -56,23 +79,25 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
 
         int deg = j->attaque - c->def;
         if (deg < 1) deg = 1;
-        printf("Vous attaquez la créature (type=%d) et infligez %d dégâts.\n",
-            (int)c->type, deg);
 
         c->pv -= deg;
         if (c->pv <= 0) {
             c->pv = 0;
             c->en_vie = 0;
-            printf("La créature est morte !\n");
+            printf("Vous attaquez la creature %s et infligez %d degats.\n",
+                creature_nom(c->type), deg);
+            printf("La creature %s est vaincue!\n", creature_nom(c->type));
         } else {
-            printf("PV créature restante : %d/%d\n", c->pv, c->pv_max);
+            printf("Vous attaquez la creature %s et infligez %d degats.\n",
+                creature_nom(c->type), deg);
+            printf("PV creature restante: %d/%d\n", c->pv, c->pv_max);
         }
     } else if (choix == 2) {
         int avant = j->oxygene;
         j->oxygene += 20;
         if (j->oxygene > j->oxygene_max) {
             j->oxygene = j->oxygene_max;
-            printf("Vous utilisez une capsule d'oxygène: %d -> %d\n", avant, j->oxygene);
+            printf("Vous utilisez une capsule d'oxygene: %d -> %d\n", avant, j->oxygene);
         } else {
             printf("Vous prenez la fuite!\n");
             int i;
@@ -159,7 +184,7 @@ int combat_resolution(MoteurJeu* jeu) {
     }
 
     int nb_attaques = creatures_phase_attaque(jeu, groupe);
-    printf("[Combat] %d attaques de créatures effectuées ce tour.\n", nb_attaques);
+    printf("[Combat] %d attaques de creatures effectuees ce tour.\n", nb_attaques);
 
     if (joueur_mort(jeu->joueur)) {
         return -1;

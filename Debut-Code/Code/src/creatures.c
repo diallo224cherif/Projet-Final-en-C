@@ -10,6 +10,19 @@ extern int joueur_defense(const Joueur* j);
 extern void joueur_reduction_oxygene(Joueur* j, int delta);
 extern void joueur_application_paralysie_tick(Joueur* j, int delta);
 
+static const char* NOMS_CREATURES[C_NB_TYPES] = {
+    "Kraken",
+    "Meduse",
+    "Requin",
+    "Poisson epee",
+    "Crabe geant",
+};
+
+const char* creature_nom(TypeCreature t) {
+    if (t < 0 || t >= C_NB_TYPES) return "Inconnue";
+    return NOMS_CREATURES[t];
+}
+
 static int clamp_min(int x, int mn){return (x < mn) ? mn : x;}
 
 Creature creature_creer(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse) {
@@ -59,7 +72,7 @@ static int creature_effectue_attaque(MoteurJeu* jeu, Creature* c) {
 
     if (c->type == C_MEDUSE) {
         joueur_application_paralysie_tick(jeu->joueur, 1);
-        printf("[Méduse] applique paralysie : -1 action prochain tour\n");
+        printf("[Meduse] applique paralysie : -1 action prochain tour\n");
     }
 
     int nb_frappe = (c->type == C_KRAKEN) ? 2 : 1;
@@ -67,8 +80,10 @@ static int creature_effectue_attaque(MoteurJeu* jeu, Creature* c) {
     for (int k = 0; k < nb_frappe; k++) {
         if (!c->en_vie || c->pv <= 0) break;
 
+        printf("[Combat] %s attaque !\n", creature_nom(c->type));
+
         int degats = calcul_degats_sur_joueur(c, jeu->joueur);
-        printf("[Attaque] Créature type=%d inflige %d dégâts.\n", (int)c->type, degats);
+        printf("[Attaque] %s inflige %d degats.\n", creature_nom(c->type), degats);
 
         joueur_degats_subis(jeu->joueur, degats);
         appliquer_stress_oxygene(jeu);
@@ -82,7 +97,7 @@ static Creature g_creatures[5];
 static GroupeCreatures g_groupe = { g_creatures, 0 };
 
 int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe) {
-    if (!jeu || !jeu->joueur || !groupe || groupe->tab <= 0) return 0;
+    if (!jeu || !jeu->joueur || !groupe || groupe->tab) return 0;
     if (groupe->nb <= 0) return 0;
 
     int total_attaques = 0;
@@ -104,7 +119,12 @@ int creatures_generation(MoteurJeu* jeu) {
     g_creatures[0] = creature_creer(C_REQUIN, 40, 40, 12, 3, 5);
     g_creatures[0].en_vie = 1;
 
-    printf("[Creatures] Génération de %d créature(s).\n", g_groupe.nb);
+    printf("[Creatures] Generation de %d creature(s).\n", g_groupe.nb);
+
+    Creature* c = &g_creatures[0];
+    printf("\nVous tombez sur une creature : %s !\n", creature_nom(c->type));
+    printf("PV: %d/%d, Att: %d, Def: %d, Vit: %d\n",
+           c->pv, c->pv_max, c->att, c->def, c->vitesse);
     return g_groupe.nb;
 }
 

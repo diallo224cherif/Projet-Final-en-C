@@ -7,7 +7,7 @@ int sauvegarde_ecrire(MoteurJeu* jeu) {
 
     FILE* f = fopen("save.txt", "w");
     if (!f) {
-        printf("[Sauvegarde] Impossible d'ouvrir save.txt en écriture.\n");
+        printf("[Sauvegarde] Impossible d'ouvrir save.txt en ecriture.\n");
         return 0;
     }
 
@@ -21,7 +21,7 @@ int sauvegarde_ecrire(MoteurJeu* jeu) {
             jeu->profondeur);
 
     fclose(f);
-    printf("[Sauvegarde] Sauvegarde effectuée dans save.txt\n");
+    printf("[Sauvegarde] Sauvegarde effectuee dans save.txt\n");
     return 1;
 }
 
@@ -30,7 +30,7 @@ int sauvegarde_charger(MoteurJeu* jeu) {
 
     FILE* f = fopen("save.txt", "r");
     if (!f) {
-        printf("[Sauvegarde] Aucune sauvegarde trouvée (save.txt).\n");
+        printf("[Sauvegarde] Aucune sauvegarde trouvee (save.txt).\n");
         return 0;
     }
 
@@ -61,6 +61,6 @@ int sauvegarde_charger(MoteurJeu* jeu) {
     j->paralysie = para;
     jeu->profondeur = prof;
 
-    printf("[Sauvegarde] Sauvegarde chargée depuis save.txt\n");
+    printf("[Sauvegarde] Sauvegarde chargee depuis save.txt\n");
     return 1;
 }
