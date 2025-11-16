@@ -13,10 +13,6 @@ extern void joueur_detruire(Joueur* j);
 extern void joueur_reinitialise(Joueur* j);
 extern void joueur_consommation_tick(Joueur* j);
 
-extern Carte* carte_charger_defaut(void);
-extern void carte_detruire(Carte* c);
-extern void carte_reinitialiser(Carte* c);
-
 extern int creatures_generation(MoteurJeu* moteur);
 extern void creatures_postcombat(MoteurJeu* moteur);
 
@@ -30,7 +26,59 @@ extern int sauvegarde_charger(MoteurJeu* moteur);
 /* Etats du jeu */
 
 static void etat_menu (MoteurJeu* moteur);
-static void etat_exploration(MoteurJeu* moteur);
+static void etat_exploration(MoteurJeu* moteur) {
+	if (!moteur || !moteur->carte || !moteur->joueur) return;
+
+	moteur->profondeur = carte_profondeur_actuelle(moteur->carte);
+
+	printf("\n=== EXPLORATION ===\n");
+	carte_afficher(moteur->carte);
+
+	printf("\nQue voulez vous faire ?\n");
+	printf("1. Se deplacer\n");
+	printf("2. Ouvrir l'inventaire\n");
+	printf("3. Sauvegarder la partie\n");
+	printf("4. Retour au menu principal\n");
+
+	int c = moteur_choix("Choix", 1, 4);
+
+	if (c == 1) {
+		printf("Deplacement :\n");
+		printf("1. Haut\n");
+		printf("2. Bas\n");
+		printf("3. Gauche\n");
+		printf("4. Droite\n");
+
+		int d = moteur_choix("Direction", 1, 4);
+		int dx = 0, dy = 0;
+
+		if (d == 1) dy = -1;
+		else if (d == 2) dy = 1;
+		else if (d == 3) dx = -1;
+		else if (d == 4) dx = 1;
+
+		if (carte_deplacer(moteur->carte, dx, dy)) {
+			moteur->profondeur = carte_profondeur_actuelle(moteur->carte);
+			joueur_consommation_tick(moteur->joueur);
+
+			if (!carte_case_sure(moteur->carte)) {
+				int rencontres = creatures_generation(moteur);
+				if (rencontres > 0) {
+					moteur->etat = ETAT_COMBAT;
+					return;
+				}
+			}
+		}
+
+		moteur->etat = ETAT_EXPLORATION;
+	} else if (c == 2) {
+		moteur->etat = ETAT_INVENTAIRE;
+	} else if (c == 3) {
+		moteur->etat = ETAT_SAUVEGARDE;
+	} else {
+		moteur->etat = ETAT_MENU;
+	}
+}
 static void etat_combat(MoteurJeu* moteur);
 static void etat_inventaire(MoteurJeu* moteur);
 static void etat_sauvegarde(MoteurJeu* moteur);
@@ -155,33 +203,6 @@ static void etat_menu(MoteurJeu* moteur){
 	} else {
 		moteur->etat = ETAT_QUITTE;
 		moteur->en_cours = 0;
-	}
-}
-
-static void etat_exploration(MoteurJeu* moteur) {
-	int rencontres = creatures_generation(moteur);
-
-	if (rencontres > 0) {
-		moteur->etat = ETAT_COMBAT;
-		return;
-	}
-
-	printf("\nExploration (profondeur=%d)\n", moteur->profondeur);
-	printf("1. Descendre\n");
-	printf("2. Ouvrir l'inventaire\n");
-	printf("3. Sauvegarder\n");
-	printf("4. Retour au menu principal\n");
-
-	int c = moteur_choix("Choix", 1, 4);
-	if (c == 1) {
-		moteur->profondeur++;
-		if (moteur->joueur) joueur_consommation_tick(moteur->joueur); /* consommation oxygène et énergie du joueur*/
-	} else if (c == 2) {
-		moteur->etat = ETAT_INVENTAIRE;
-	} else if (c == 3) {
-		moteur->etat = ETAT_SAUVEGARDE;
-	} else {
-		moteur->etat = ETAT_MENU;
 	}
 }
 
