@@ -1,10 +1,11 @@
 #ifndef CREATURES_H
 #define CREATURES_H
 
-typedef struct MoteurJeu MoteurJeu;
-typedef struct Joueur Joueur;
+#include "joueur.h"
 
-/* type de creature */
+/* forward declaration du moteur, sans typedef */
+struct MoteurJeu;
+
 typedef enum {
     C_KRAKEN = 0,
     C_MEDUSE,
@@ -14,14 +15,10 @@ typedef enum {
     C_NB_TYPES
 } TypeCreature;
 
-const char* creature_nom(TypeCreature t);
-
-/* effets persistants par creature */
 typedef struct {
-    int carapace_active; /* réduit les dégâts subis */
+    int carapace_active; /* pour le crabe, etc. */
 } EffetsCreature;
 
-/* modèle de creature */
 typedef struct {
     TypeCreature type;
     int pv;
@@ -30,20 +27,24 @@ typedef struct {
     int def;
     int vitesse;
     EffetsCreature effets;
-    int en_vie; /* evite test de vie négatif */
+    int en_vie;
 } Creature;
 
 typedef struct {
     Creature* tab;
-    int nb;
+    int       nb;
 } GroupeCreatures;
 
-int creatures_phase_attaque(MoteurJeu* jeu, GroupeCreatures* groupe);
+/* API */
+const char*      creature_nom(TypeCreature t);
+Creature         creature_creer(TypeCreature t,
+                                int pv, int pv_max,
+                                int att, int def, int vitesse);
 
-Creature creature_creer(TypeCreature t, int pv, int pv_max, int att, int def, int vitesse);
-
-int creatures_generation(MoteurJeu* jeu);
-void creatures_postcombat(MoteurJeu* jeu);
-GroupeCreatures* combat_obtenir_groupe(MoteurJeu* jeu);
+int              creatures_phase_attaque(struct MoteurJeu* jeu,
+                                         GroupeCreatures* groupe);
+int              creatures_generation(struct MoteurJeu* jeu);
+void             creatures_postcombat(struct MoteurJeu* jeu);
+GroupeCreatures* combat_obtenir_groupe(struct MoteurJeu* jeu);
 
 #endif

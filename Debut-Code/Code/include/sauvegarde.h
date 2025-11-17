@@ -3,7 +3,7 @@
 
 #include "moteur.h"
 
-int sauvegarde_ecrire(MoteurJeu* jeu);
-int sauvegarde_charger(MoteurJeu* jeu);
+int sauvegarde_ecrire(MoteurJeu* moteur);
+int sauvegarde_charger(MoteurJeu* moteur);
 
-#endif /* SAUVEGARDE_H */
+#endif

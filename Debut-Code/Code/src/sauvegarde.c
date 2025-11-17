@@ -1,66 +1,78 @@
 #include "sauvegarde.h"
 #include "joueur.h"
+#include "inventaire.h"
 #include <stdio.h>
 
-int sauvegarde_ecrire(MoteurJeu* jeu) {
-    if (!jeu || !jeu->joueur) return 0;
+int sauvegarde_ecrire(MoteurJeu* moteur) {
+    if (!moteur || !moteur->joueur || !moteur->inventaire) return 0;
 
-    FILE* f = fopen("save.txt", "w");
+    FILE* f = fopen("save.dat", "w");
     if (!f) {
-        printf("[Sauvegarde] Impossible d'ouvrir save.txt en ecriture.\n");
+        printf("Impossible d'ouvrir le fichier de sauvegarde.\n");
         return 0;
     }
 
-    Joueur* j = jeu->joueur;
+    Joueur* j        = moteur->joueur;
+    Inventaire_s* inv = moteur->inventaire;
 
-    fprintf(f, "%d %d %d %d %d\n",
-            j->pv,
-            j->oxygene,
-            j->fatigue,
-            j->paralysie,
-            jeu->profondeur);
+    /* Format simple texte */
+    fprintf(f,
+            "%d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+            j->pv, j->pv_max,
+            j->oxygene, j->oxygene_max,
+            j->fatigue, j->paralysie,
+            j->attaque, j->defense_base,
+            j->niveau, j->experience,
+            j->apnee, j->resistance, j->force);
+
+    fprintf(f, "%d %d %d\n",
+            inv->perles,
+            inv->nb_capsules_oxygene,
+            inv->nb_kits_soins);
+
+    fprintf(f, "%d\n", moteur->profondeur);
 
     fclose(f);
-    printf("[Sauvegarde] Sauvegarde effectuee dans save.txt\n");
     return 1;
 }
 
-int sauvegarde_charger(MoteurJeu* jeu) {
-    if (!jeu || !jeu->joueur) return 0;
+int sauvegarde_charger(MoteurJeu* moteur) {
+    if (!moteur || !moteur->joueur || !moteur->inventaire) return 0;
 
-    FILE* f = fopen("save.txt", "r");
+    FILE* f = fopen("save.dat", "r");
     if (!f) {
-        printf("[Sauvegarde] Aucune sauvegarde trouvee (save.txt).\n");
+        printf("Aucune sauvegarde trouvee.\n");
         return 0;
     }
 
-    Joueur* j = jeu->joueur;
-    int pv, oxy, fat, para, prof;
+    Joueur* j         = moteur->joueur;
+    Inventaire_s* inv = moteur->inventaire;
 
-    int lus = fscanf(f, "%d %d %d %d %d",
-                     &pv, &oxy, &fat, &para, &prof);
+    int ok1 = fscanf(f,
+                     "%d %d %d %d %d %d %d %d %d %d %d %d %d",
+                     &j->pv, &j->pv_max,
+                     &j->oxygene, &j->oxygene_max,
+                     &j->fatigue, &j->paralysie,
+                     &j->attaque, &j->defense_base,
+                     &j->niveau, &j->experience,
+                     &j->apnee, &j->resistance, &j->force);
+
+    int ok2 = fscanf(f, "%d %d %d",
+                     &inv->perles,
+                     &inv->nb_capsules_oxygene,
+                     &inv->nb_kits_soins);
+
+    int ok3 = fscanf(f, "%d", &moteur->profondeur);
+
     fclose(f);
 
-    if (lus != 5) {
-        printf("[Sauvegarde] Fichier de sauvegarde invalide.\n");
+    if (ok1 != 13 || ok2 != 3 || ok3 != 1) {
+        printf("Fichier de sauvegarde corrompu.\n");
         return 0;
     }
 
-    if (pv < 0) pv = 0;
-    if (pv > j->pv_max) pv = j->pv_max;
+    if (j->pv > j->pv_max) j->pv = j->pv_max;
+    if (j->oxygene > j->oxygene_max) j->oxygene = j->oxygene_max;
 
-    if (oxy < 0) oxy = 0;
-    if (oxy > j->oxygene_max) oxy = j->oxygene_max;
-
-    if (fat < 0) fat = 0;
-    if (para < 0) para = 0;
-
-    j->pv        = pv;
-    j->oxygene   = oxy;
-    j->fatigue   = fat;
-    j->paralysie = para;
-    jeu->profondeur = prof;
-
-    printf("[Sauvegarde] Sauvegarde chargee depuis save.txt\n");
     return 1;
 }

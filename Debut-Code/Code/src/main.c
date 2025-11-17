@@ -1,4 +1,4 @@
-#include "../include/moteur.h"
+#include "moteur.h"
 #include <stdio.h>
 
 

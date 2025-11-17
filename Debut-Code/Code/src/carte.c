@@ -1,7 +1,6 @@
 #include "carte.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "../include/joueur.h"
 
 typedef struct {
     TypeLieu type;
@@ -17,12 +16,13 @@ struct Carte {
     int pos_colonne;
 };
 
-static void case_init(CaseCarte* c, TypeLieu t, int safe, int nb_enemis, int tresor, int shop) {
-    c->type = t;
-    c->safe = safe;
+static void case_init(CaseCarte* c, TypeLieu t, int safe,
+                      int nb_enemis, int tresor, int shop) {
+    c->type           = t;
+    c->safe           = safe;
     c->nb_ennemis_max = nb_enemis;
-    c->tresor = tresor;
-    c->shop = shop;
+    c->tresor         = tresor;
+    c->shop           = shop;
 }
 
 Carte* carte_charger_defaut(Joueur* joueur) {
@@ -30,13 +30,13 @@ Carte* carte_charger_defaut(Joueur* joueur) {
     if (!c) return NULL;
 
     /* Ligne 0 */
-    case_init(&c->cases[0][0], LIEU_BASE, 1, 0, 0, 0);
-    case_init(&c->cases[0][1], LIEU_OCEAN, 1, 0, 0, 0);
-    case_init(&c->cases[0][2], LIEU_OCEAN, 1, 0, 0, 0);
+    case_init(&c->cases[0][0], LIEU_BASE,   1, 0, 0, 0);
+    case_init(&c->cases[0][1], LIEU_OCEAN,  1, 0, 0, 0);
+    case_init(&c->cases[0][2], LIEU_OCEAN,  1, 0, 0, 0);
     case_init(&c->cases[0][3], LIEU_BATEAU, 1, 0, 0, 1);
 
     /* Ligne 1 */
-    case_init(&c->cases[1][0], LIEU_RECIF, 0, 3, 0, 0);
+    case_init(&c->cases[1][0], LIEU_RECIF,  0, 3, 0, 0);
     case_init(&c->cases[1][1], LIEU_EPAVE,  0, 2, 1, 0);
     case_init(&c->cases[1][2], LIEU_ALGUES, 0, 5, 0, 0);
     case_init(&c->cases[1][3], LIEU_GROTTE, 1, 0, 0, 0);
@@ -47,13 +47,11 @@ Carte* carte_charger_defaut(Joueur* joueur) {
     case_init(&c->cases[2][2], LIEU_ZONE_BOSS, 0, 4, 0, 0);
     case_init(&c->cases[2][3], LIEU_BLOQUE,    1, 0, 0, 0);
 
-    /* Position de départ */
     c->pos_ligne   = 0;
     c->pos_colonne = 0;
 
     printf("[Carte] Carte par defaut chargee.\n");
 
-    // ✅ Bonus XP au démarrage
     if (joueur) {
         joueur_ajouter_experience(joueur, 10);
         joueur_debloquer_competence(joueur);
@@ -106,7 +104,8 @@ void carte_afficher(const Carte* c) {
         printf("(profondeur ~%dm)\n", prof);
     }
 
-    printf("\nLegende : B=Base, O=Ocean, S=Bateau (Shop), R=Recif, E=Epave, A=Algues, G=Grotte, X=Zone Boss, #=Bloque\n");
+    printf("\nLegende : B=Base, O=Ocean, S=Bateau (Shop), R=Recif, "
+           "E=Epave, A=Algues, G=Grotte, X=Zone Boss, #=Bloque\n");
 }
 
 int carte_deplacer(Carte* c, int dx, int dy) {
@@ -122,7 +121,7 @@ int carte_deplacer(Carte* c, int dx, int dy) {
     }
 
     if (c->cases[nouvelle_ligne][nouvelle_colonne].type == LIEU_BLOQUE) {
-        printf("Vous ne pouvez pas aller par la\n");
+        printf("Vous ne pouvez pas aller par la.\n");
         return 0;
     }
 

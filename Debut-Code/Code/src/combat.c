@@ -1,5 +1,8 @@
-#include "../include/combat.h"
-#include "../include/joueur.h"
+#include "combat.h"
+#include "joueur.h"
+#include "inventaire.h"
+#include "moteur.h"
+#include "creatures.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,7 +40,8 @@ void combat_afficher_etat(const MoteurJeu* jeu) {
     printf("Oxygene    : %d/%d\n", j->oxygene, j->oxygene_max);
     printf("Fatigue    : %d\n", j->fatigue);
     printf("Niveau : %d | XP : %d/100\n", j->niveau, j->experience);
-    printf("Capacites -> Apnee: %d | Resistance: %d | Force: %d\n", j->apnee, j->resistance, j->force);
+    printf("Capacites -> Apnee: %d | Resistance: %d | Force: %d\n",
+           j->apnee, j->resistance, j->force);
     if (j->paralysie > 0) {
         printf("Statut: PARALYSE (%d tour(s) restant(s))\n", j->paralysie);
     }
@@ -52,7 +56,8 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
 
     if (j->paralysie > 0) {
         printf("Vous etes paralyse et ne pouvez pas agir ce tour.\n");
-        j->paralysie --;
+        j->paralysie--;
+        if (j->paralysie < 0) j->paralysie = 0;
         return;
     }
 
@@ -72,12 +77,12 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
             }
         }
 
-    if (cible_index == -1) {
-        printf("Aucune creature à attaquer.\n");
-        return;
-    }
+        if (cible_index == -1) {
+            printf("Aucune creature a attaquer.\n");
+            return;
+        }
 
-    Creature* c = &groupe->tab[cible_index];
+        Creature* c = &groupe->tab[cible_index];
 
         int deg = j->attaque - c->def;
         if (deg < 1) deg = 1;
@@ -87,15 +92,17 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
             c->pv = 0;
             c->en_vie = 0;
             printf("Vous attaquez la creature %s et infligez %d degats.\n",
-                creature_nom(c->type), deg);
+                   creature_nom(c->type), deg);
             printf("La creature %s est vaincue!\n", creature_nom(c->type));
 
+            /* XP gagnée par kill */
             joueur_ajouter_experience(j, 20);
-            printf("[XP] Vous gagnez 20 points d'expérience ! (XP actuel: %d/100)\n", j->experience);
+            printf("[XP] Vous gagnez 20 points d'experience ! (XP actuel: %d/100)\n",
+                   j->experience);
             joueur_debloquer_competence(j);
         } else {
             printf("Vous attaquez la creature %s et infligez %d degats.\n",
-                creature_nom(c->type), deg);
+                   creature_nom(c->type), deg);
             printf("PV creature restante: %d/%d\n", c->pv, c->pv_max);
         }
     } else if (choix == 2) {
@@ -103,63 +110,68 @@ void combat_action_joueur(MoteurJeu* jeu, GroupeCreatures* groupe) {
         j->oxygene += 20;
         if (j->oxygene > j->oxygene_max) {
             j->oxygene = j->oxygene_max;
-            printf("Vous utilisez une capsule d'oxygene: %d -> %d\n", avant, j->oxygene);
-        } else {
-            printf("Vous prenez la fuite!\n");
-            int i;
-            for (i = 0; i < groupe->nb; i++) {
-                groupe->tab[i].en_vie = 0;
-                groupe->tab[i].pv = 0;
-            }
-            groupe->nb = 0;
         }
+        printf("Vous utilisez une capsule d'oxygene: %d -> %d\n", avant, j->oxygene);
+    } else if (choix == 3) {
+        printf("Vous prenez la fuite!\n");
+        int i;
+        for (i = 0; i < groupe->nb; i++) {
+            groupe->tab[i].en_vie = 0;
+            groupe->tab[i].pv = 0;
+        }
+        groupe->nb = 0;
     }
 }
 
+/* --- Fonctions joueur utilisées ici (deja definies ailleurs) --- */
 
-extern int joueur_mort(const Joueur* j);
-extern int joueur_pv(const Joueur* j);
-extern int joueur_oxygene(const Joueur* j);
-extern int joueur_fatigue(const Joueur* j);
-
+extern int  joueur_mort(const Joueur* j);
+extern int  joueur_oxygene(const Joueur* j);
 extern void joueur_consommation_oxygene(Joueur* j, int profondeur);
-
-/* gestion retrait oxygene selon profondeur */
-
 extern void joueur_recuperation_fatigue(Joueur* j, int delta);
 
-/* groupe de creature pour ce combat */
-
+/* Groupe de créatures */
 extern GroupeCreatures* combat_obtenir_groupe(MoteurJeu* jeu);
 
-/* verification creatures mortes */
+/* recompenses inventaire */
+extern void distribuer_recompenses_combat(Inventaire_s* inv,
+                                          int profondeur,
+                                          int nb_creatures_vaincues);
+
+/* ------------------------------------------- */
+/*       verification : toutes mortes ?        */
+/* ------------------------------------------- */
 
 static int combat_creatures_mortes(const GroupeCreatures* g) {
     int i;
-    if (!g || !g->tab || g->nb <= 0) return 1; /* pas de créatures => toutes mortes */
+    if (!g || !g->tab || g->nb <= 0) return 1;
     for (i = 0; i < g->nb; i++) {
         if (g->tab[i].en_vie && g->tab[i].pv > 0) {
-            return 0; /* au moins une en vie */
+            return 0;
         }
     }
-    return 1; /* toutes mortes */
+    return 1;
 }
 
-/* alerte oxygène */
+/* ------------------------------------------- */
+/*              alerte oxygene                 */
+/* ------------------------------------------- */
 
 static void combat_alerte_oxygene(const Joueur* j) {
     int oxy = joueur_oxygene(j);
     if (oxy <= 0) {
-        printf("!!! VOUS N'AVEZ PLUS D'OXYGÈNE !!!\n");
+        printf("!!! VOUS N'AVEZ PLUS D'OXYGENE !!!\n");
     } else if (oxy <= 10) {
-        printf("!!! ALERTE OXYGÈNE CRITIQUE (%d) !!!\n", oxy);
+        printf("!!! ALERTE OXYGENE CRITIQUE (%d) !!!\n", oxy);
         printf("Utilisez une capsule ou remontez rapidement !\n");
     } else if (oxy <= 30) {
-        printf("! Alerte oxygène faible (%d) !\n", oxy);
+        printf("! Alerte oxygene faible (%d) !\n", oxy);
     }
 }
 
-/* fonction principale tour de combat */
+/* ------------------------------------------- */
+/*         fonction principale de combat       */
+/* ------------------------------------------- */
 
 int combat_resolution(MoteurJeu* jeu) {
     if (!jeu || !jeu->joueur) return 0;
@@ -170,27 +182,41 @@ int combat_resolution(MoteurJeu* jeu) {
     }
 
     combat_afficher_etat(jeu);
-
     combat_action_joueur(jeu, groupe);
 
     if (combat_creatures_mortes(groupe)) {
+        if (jeu->inventaire) {
+            int nb_creatures_vaincues = 0;
+            int i;
+            for (i = 0; i < groupe->nb; ++i) {
+                if (!groupe->tab[i].en_vie || groupe->tab[i].pv <= 0) {
+                    nb_creatures_vaincues++;
+                }
+            }
+            distribuer_recompenses_combat(jeu->inventaire,
+                                          jeu->profondeur,
+                                          nb_creatures_vaincues);
+        }
         return 1;
     }
 
     if (joueur_mort(jeu->joueur)) {
-        return -1; /* défaite */
+        return -1;
     }
 
     joueur_consommation_oxygene(jeu->joueur, jeu->profondeur);
-
     combat_alerte_oxygene(jeu->joueur);
 
     if (joueur_mort(jeu->joueur)) {
-        return -1; /* défaite */
+        return -1;
     }
 
-    int nb_attaques = creatures_phase_attaque(jeu, groupe);
-    printf("[Combat] %d attaques de creatures effectuees ce tour.\n", nb_attaques);
+    /* Attaques des créatures */
+    {
+        int nb_attaques = creatures_phase_attaque(jeu, groupe);
+        printf("[Combat] %d attaques de creatures effectuees ce tour.\n",
+               nb_attaques);
+    }
 
     if (joueur_mort(jeu->joueur)) {
         return -1;
@@ -199,14 +225,26 @@ int combat_resolution(MoteurJeu* jeu) {
     joueur_recuperation_fatigue(jeu->joueur, 1);
 
     if (combat_creatures_mortes(groupe)) {
-        return 1; /* victoire */
+        if (jeu->inventaire) {
+            int nb_creatures_vaincues = 0;
+            int i;
+            for (i = 0; i < groupe->nb; ++i) {
+                if (!groupe->tab[i].en_vie || groupe->tab[i].pv <= 0) {
+                    nb_creatures_vaincues++;
+                }
+            }
+            distribuer_recompenses_combat(jeu->inventaire,
+                                          jeu->profondeur,
+                                          nb_creatures_vaincues);
+        }
+        return 1;
     }
 
     if (joueur_mort(jeu->joueur)) {
         return -1;
     }
 
-    return 0; /* combat continue */
+    return 0;
 }
 
 int calcul_degats(int attaque_min, int attaque_max, int defense) {

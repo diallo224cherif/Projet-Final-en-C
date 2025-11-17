@@ -3,7 +3,8 @@
 
 #include "joueur.h"
 
-typedef struct Carte Carte;
+#define CARTE_LIGNES   3
+#define CARTE_COLONNES 4
 
 typedef enum {
     LIEU_BASE = 0,
@@ -17,14 +18,15 @@ typedef enum {
     LIEU_BLOQUE
 } TypeLieu;
 
-#define CARTE_LIGNES 3
-#define CARTE_COLONNES 4
+typedef struct Carte Carte;
 
 Carte* carte_charger_defaut(Joueur* joueur);
 void   carte_reinitialiser(Carte* c);
 void   carte_detruire(Carte* c);
+
 void   carte_afficher(const Carte* c);
 int    carte_deplacer(Carte* c, int dx, int dy);
+
 int    carte_profondeur_actuelle(const Carte* c);
 int    carte_case_sure(const Carte* c);
 int    carte_nb_ennemis_max(const Carte* c);
